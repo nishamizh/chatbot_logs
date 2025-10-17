@@ -50,17 +50,47 @@ The Data used for training are 2 Csv file that has logs for various types of Log
 Model input is formed by combining Component, Content, and EventTemplate fields.
 
 ## 2. Data Wrangling:
-####  <i> About the Data </i> 
-This particular data has 4000 rows.
-The Hadoop and Zookeeper Data logs had the columns 'LineId', 'Date', 'Time', 'Level', 'Component', 'Content', 'EventId', 'EventTemplate', 'LogType' in common. The Hadoop has an extra column 'Process' whereas the Zookeeper has an extra column 'Node'. 
-####  <i>  For this Data wrangling the steps I followed:  </i> 
-These additional columns are renamed as AdditionalInformation which has the Dictionary value to have the <column_name> : value as their data in String format for both the Zookeper and Data.
-During this phase the extra columns is <b>LogType</b> is added to have a constant value as "Hadoop" for Hadoop data or "Zookeeper" for Zookeeper data is added as an extra feature column.
-The merging of these Hadoop and Zookeeper Data Logs are merged as a single integrated Log - data_logs and they are used in the future. 
-The Data is checked for any missing values. Date and Time Columns are merged and set to have type Date.
-The EventTemplate column is removes extra spaces (2 or more consecutive spaces) from each string and they are replaced with <VAR> and all the regexp clean up are done.
-Normalization of the Column - Level (Target) is done to gain insight about the balance in the data.
-An additional column - <b>input</b> is made as dictionary in the format <column_name> : value for the Timestamp, LogType, Columns Component, Content, EventId, EventTemplate.
+####  <i> 🗂️ About the Data </i>
+The dataset contains 4,000 rows of log entries from Hadoop and Zookeeper systems. Both share common columns: LineId, Date, Time, Level, Component, Content, EventId, EventTemplate, and LogType. Hadoop includes an extra column Process, while Zookeeper includes Node.
+
+####  <i>  🔧 Wrangling Steps:  </i> 
+Unified schema: The extra columns (Process and Node) are renamed to AdditionalInformation, stored as stringified dictionaries with <column_name>: value format.
+
+Source tagging: A new column LogType is added to label each entry as either "Hadoop" or "Zookeeper".
+
+Data integration: Both logs are merged into a single DataFrame called data_logs.
+
+Missing values: Checked and handled appropriately.
+
+Timestamp creation: Date and Time columns are merged and converted to datetime format.
+
+Template cleanup: EventTemplate strings are cleaned using regex—extra spaces are removed and replaced with <VAR>.
+
+Target normalization: The Level column is normalized to assess class balance.
+
+Input formatting: A new column input is created as a dictionary containing Timestamp, LogType, Component, Content, EventId, and EventTemplate.
+
+Tokenization: These inputs are converted to numerical format using the pretrained DistilBERT tokenizer.
+
+## 3. EDA
+📊 Visual Insights
+Log Level Distribution: Bar plot showing frequency of each log level.
+
+Temporal Trends: Stacked bar chart visualizing log levels over time.
+
+Frequent Errors: Top 20 components with the most error logs, visualized alongside EventTemplate frequency.
+
+Token Count Analysis: Histogram of token counts per log entry—over 80% have fewer than 20 tokens.
+
+Component-Level Patterns: Grouped analysis of Component and Level to identify recurring combinations.
+
+Log Rate: Line plot showing number of logs per minute.
+
+Token Length by Level: Average token count per log level.
+
+Normalized Component-Level Distribution: Stacked bar chart showing percentage breakdown of log levels within top components.
+
+Export the final cleaned data to support both exploratory analysis and machine learning modeling.
 
 ## 🧠 Model Pipeline Summary
 
