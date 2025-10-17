@@ -90,7 +90,18 @@ Token Length by Level: Average token count per log level.
 
 Normalized Component-Level Distribution: Stacked bar chart showing percentage breakdown of log levels within top components.
 
+Label Encoding of the Log LEVEL is done.
+target   Level
+0        ERROR
+1        FATAL
+2        INFO
+3        WARN
+
 Export the final cleaned data to support both exploratory analysis and machine learning modeling.
+
+## 4. Data Pre Processing
+X = data['input']
+y = data['target']
 
 ## 🧠 Model Pipeline Summary
 
