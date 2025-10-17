@@ -70,7 +70,11 @@ Target normalization: The Level column is normalized to assess class balance.
 
 Input formatting: A new column input is created as a dictionary containing Timestamp, LogType, Component, Content, EventId, and EventTemplate.
 
-Tokenization: These inputs are converted to numerical format using the pretrained DistilBERT tokenizer.
+```python
+input_text = log['Component'] + " | " + log['Content'] + " | " + log['EventTemplate']
+```
+
+Tokenization: The input text is converted into a numerical sequence using the pre-trained distilbert-base-uncased tokenizer.
 
 ## 3. EDA
 📊 Visual Insights
@@ -100,32 +104,119 @@ target   Level
 Export the final cleaned data to support both exploratory analysis and machine learning modeling.
 
 ## 4. Data Pre Processing
-X = data['input']
-y = data['target']
+
+The dataset is split into features and a target column.
+
+The feature set (X) is constructed by combining Timestamp, LogType, Component, Content, EventId, and EventTemplate into a single column named input.
+
+The target variable (y) corresponds to the Level column, representing the log severity.
+
+To ensure balanced representation across log levels, the data is divided into training and testing sets using stratified sampling, with 80% allocated for training and 20% for testing.
 
 ## 🧠 Model Pipeline Summary
 
-- **Data Preparation & Feature Engineering**  
-  Combine key log fields into a single input string:
-  ```python
-  input_text = log['Component'] + " | " + log['Content'] + " | " + log['EventTemplate']
 
-Tokenization: The input text is converted into a numerical sequence using the pre-trained distilbert-base-uncased tokenizer.
+## 5. Modelling:
 
 Model Architecture: A sequence classification head is added atop the DistilBERT base model. The entire network is fine-tuned on the labeled log dataset.
 
-### Evaluation: 
-The model demonstrated strong performance on the held-out test set, achieving a final evaluation loss of 0.0098.
+📦 Dataset Wrapping Raw log data (X_train, y_train, X_test, y_test) is converted into Hugging Face Dataset objects using Dataset.from_dict(). This enables efficient mapping and integration with Hugging Face workflows.
 
+🧩 Input Formatting Each log entry is preprocessed into a unified string format combining Timestamp, LogType, Component, Content, EventId, and EventTemplate. This composite input is stored under the "text" field.
 
----
+✂️ Tokenization Function A custom tokenize() function is defined using a pretrained DistilBERT tokenizer. It applies padding="max_length" and truncation=True to standardize input length and prevent overflow.
 
-### 6. **Usage and Navigation**
-Use bullet points and bold keywords:
-```markdown
-## 🛠 Usage and Navigation
+🗂️ Tokenized Dataset Mapping The tokenize() function is applied to both training and testing datasets using .map(batched=True), producing tokenized versions with input_ids, attention_mask, and label.
 
-- **Download**: Clone this repository or download the `index.html` file.
-- **Open**: Launch `index.html` in any modern web browser.
-- **Navigate**: Use the sticky navbar to jump between sections: Overview, Data Exploration, Model Pipeline, and Interactive Demo.
-- **Interact**: In the Top Components Analysis chart, click any component bar to update the adjacent chart with its log level distribution.
+⚙️ Training Configuration Training hyperparameters are defined using TrainingArguments, including batch size, number of epochs, output directory, and logging path.
+
+🚀 Trainer Initialization A Trainer object is instantiated with the model, training arguments, tokenized datasets, and optionally a compute_metrics function for evaluation.
+
+📈 Model Training The model is trained using trainer.train(), which handles batching, optimization, and epoch-wise updates internally.
+
+🔍 Model Evaluation After training, trainer.evaluate() is called to assess performance on the test set. Metrics like accuracy, precision, recall, and F1-score can be computed using a custom compute_metrics() function.
+
+💾 Model Export The trained model is saved using trainer.save_model(), and the tokenizer is saved separately with tokenizer.save_pretrained() for consistent inference.
+
+📤 Downstream Inference Ready The saved model and tokenizer can now be loaded for real-time log classification, integrated into a pipeline, or deployed via API or cloud service.
+
+### Metrics Evaluation: 
+
+The model was trained to classify log entries into four severity levels:
+
+0 → ERROR
+
+1 → FATAL
+
+2 → INFO
+
+3 → WARN
+
+The evaluation was conducted on a test set of 800 samples, and the results reveal significant class imbalance and prediction bias.
+
+📈 Class-wise Performance
+
+| Class | Label | Precision | Recall | F1-Score | Support |
+|-------|-------|-----------|--------|----------|---------|
+| 0     | ERROR | 1.00      | 0.97   | 0.98     | 33      |
+| 1     | FATAL | 0.00      | 0.00   | 0.00     | 0       |
+| 2     | INFO  | 0.45      | 1.00   | 0.62     | 342     |
+| 3     | WARN  | 0.00      | 0.00   | 0.00     | 425     |
+
+ERROR (0): The model performs exceptionally well, with near-perfect precision and recall.
+
+FATAL (1): No predictions were made for this class, likely due to its absence in the test set or extreme underrepresentation in training.
+
+INFO (2): High recall but low precision suggests the model over-predicts this class, leading to many false positives.
+
+WARN (3): The model fails to identify any samples from this class, despite it being the largest in the test set.
+
+📊 Aggregate Metrics
+Accuracy: 46.75% — less than half of the predictions were correct.
+
+Macro Average:
+
+Precision: 0.36
+
+Recall: 0.49
+
+F1-Score: 0.40 Treats all classes equally, highlighting poor performance on FATAL and WARN.
+
+Weighted Average:
+
+Precision: 0.23
+
+Recall: 0.47
+
+F1-Score: 0.30 Accounts for class imbalance. Dominated by performance on INFO and WARN.
+
+⚠️ Key Findings
+Severe class imbalance: FATAL had 0 support in the test set, and likely very few samples in training.
+
+Model bias toward INFO: It predicts INFO frequently, even when incorrect.
+
+Poor generalization: The model fails to recognize WARN, which had the highest support (425 samples).
+
+🛠 Recommendations
+Resample or augment minority classes (e.g., FATAL, ERROR) to improve representation.
+
+Use class weights or focal loss to penalize misclassification of rare classes.
+
+Perform error analysis to understand feature overlap between INFO and WARN.
+
+Visualize predictions with a confusion matrix to identify misclassification patterns.
+
+Consider stratified sampling during train-test split to ensure all classes are represented.
+
+Severe class imbalance: With only 2 samples out of 4000, the FATAL class represents just 0.05% of the dataset.
+
+Model bias toward frequent classes: Transformers trained with cross-entropy loss tend to favor majority classes unless explicitly corrected.
+
+No learned signal: With so few examples, the model likely didn’t learn meaningful patterns for FATAL, resulting in zero predictions.
+
+#### Validation
+The cahtbot is validated  for testing.
+
+## Chatboot UI
+
+![Chatboot UI](chatbot_screenshot.png)
