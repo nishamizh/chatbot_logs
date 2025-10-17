@@ -33,8 +33,34 @@ The report provides a complete narrative, from initial data exploration (EDA) th
 | Evaluation     | `Hugging Face Metrics`        | Calculating custom classification metrics (F1-score, Accuracy).         |
 
 
+## 1. Problem Statement:
+Infrastructure logs grow rapidly, non-technical support teams are increasingly tasked with assessing log severity from ticket content. Empowering them with a chatbot that interprets log severity reduces triage time for low-priority issues, updates ticket severity automatically, and engineers to focus on critical incidents.
 
+### Context:
+As infrastructure scales, the volume of system logs grows rapidly, making manual triage increasingly inefficient. Non-technical support teams receive tickets containing severity levels and raw logs, but these severity labels are often misaligned with the actual log content and summary. This leads to redundant triage efforts by engineers, reducing their productivity. By enabling support teams to validate and update ticket severity based on log analysis, we can streamline triage and allow engineers to focus on high-impact tasks.
+
+### Solution Overview:
+Empowering them with a chatbot that interprets log severity reduces triage time for low-priority issues, updates ticket severity automatically, and engineers to focus on critical incidents.
+
+### Product Outcome:
+The top Severity tasks are  prioritized and are completed on time before it creates a bigger issue.
+
+## Key data sources:
+The Data used for training are 2 Csv file that has logs for various types of Logs for Hadoop and Zookeeper.
 Model input is formed by combining Component, Content, and EventTemplate fields.
+
+## 2. Data Wrangling:
+####  <i> About the Data </i> 
+This particular data has 4000 rows.
+The Hadoop and Zookeeper Data logs had the columns 'LineId', 'Date', 'Time', 'Level', 'Component', 'Content', 'EventId', 'EventTemplate', 'LogType' in common. The Hadoop has an extra column 'Process' whereas the Zookeeper has an extra column 'Node'. 
+####  <i>  For this Data wrangling the steps I followed:  </i> 
+These additional columns are renamed as AdditionalInformation which has the Dictionary value to have the <column_name> : value as their data in String format for both the Zookeper and Data.
+During this phase the extra columns is <b>LogType</b> is added to have a constant value as "Hadoop" for Hadoop data or "Zookeeper" for Zookeeper data is added as an extra feature column.
+The merging of these Hadoop and Zookeeper Data Logs are merged as a single integrated Log - data_logs and they are used in the future. 
+The Data is checked for any missing values. Date and Time Columns are merged and set to have type Date.
+The EventTemplate column is removes extra spaces (2 or more consecutive spaces) from each string and they are replaced with <VAR> and all the regexp clean up are done.
+Normalization of the Column - Level (Target) is done to gain insight about the balance in the data.
+An additional column - <b>input</b> is made as dictionary in the format <column_name> : value for the Timestamp, LogType, Columns Component, Content, EventId, EventTemplate.
 
 ## 🧠 Model Pipeline Summary
 
